@@ -9,18 +9,18 @@ export async function GET(request: NextRequest) {
 
     const { merchantId } = user;
 
-    let [storeSettings, widgetSettings] = await Promise.all([
-      prisma.storeSettings.findUnique({ where: { merchantId } }),
-      prisma.widgetSettings.findUnique({ where: { merchantId } }),
+    const [storeSettings, widgetSettings] = await Promise.all([
+      prisma.storeSettings.upsert({
+        where: { merchantId },
+        create: { merchantId },
+        update: {},
+      }),
+      prisma.widgetSettings.upsert({
+        where: { merchantId },
+        create: { merchantId },
+        update: {},
+      }),
     ]);
-
-    if (!storeSettings) {
-      storeSettings = await prisma.storeSettings.create({ data: { merchantId } });
-    }
-
-    if (!widgetSettings) {
-      widgetSettings = await prisma.widgetSettings.create({ data: { merchantId } });
-    }
 
     return NextResponse.json({ data: { storeSettings, widgetSettings } });
   } catch (error) {

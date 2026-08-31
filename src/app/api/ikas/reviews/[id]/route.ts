@@ -19,7 +19,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Review not found' }, { status: 404 });
     }
 
-    await prisma.review.delete({ where: { id } });
+    await prisma.$transaction(async (tx) => {
+      await tx.couponUsage.deleteMany({ where: { reviewId: id } });
+      await tx.review.delete({ where: { id } });
+    });
 
     if (review.status === 'published') {
       await recalculateProductRating(merchantId, review.productId);
