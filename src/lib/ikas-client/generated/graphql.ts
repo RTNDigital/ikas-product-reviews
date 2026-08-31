@@ -14,6 +14,11 @@ export type CreateStorefrontJSScriptInput = {
   storefrontId: string;
 }
 
+export type PaginationInput = {
+  limit?: number;
+  page?: number;
+}
+
 export type GetMerchantQueryVariables = {}
 
 export type GetMerchantQueryData = {
@@ -60,6 +65,27 @@ export interface CreateStorefrontJSScriptMutation {
   createStorefrontJSScript: CreateStorefrontJSScriptMutationData;
 }
 
+export type ListProductQueryVariables = {
+  search?: string;
+  pagination?: PaginationInput;
+}
+
+export type ListProductQueryData = {
+  data: Array<{
+  id: string;
+  name: string;
+  metaData?: {
+  id: string;
+  slug: string;
+};
+}>;
+  count: number;
+}
+
+export interface ListProductQuery {
+  listProduct: ListProductQueryData;
+}
+
 export class GeneratedQueries {
   client: BaseGraphQLAPIClient<any>;
 
@@ -101,6 +127,25 @@ export class GeneratedQueries {
   }
 `;
     return this.client.query<Partial<ListStorefrontQuery>>({ query });
+  }
+
+  async listProduct(variables: ListProductQueryVariables): Promise<APIResult<Partial<ListProductQuery>>> {
+    const query = `
+  query listProduct($search: String, $pagination: PaginationInput) {
+    listProduct(search: $search, pagination: $pagination) {
+      data {
+        id
+        name
+        metaData {
+          id
+          slug
+        }
+      }
+      count
+    }
+  }
+`;
+    return this.client.query<Partial<ListProductQuery>>({ query, variables });
   }
 }
 
