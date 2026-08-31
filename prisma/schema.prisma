@@ -1,0 +1,178 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model AuthToken {
+  id              String   @id
+  merchantId      String
+  authorizedAppId String?  @unique
+  salesChannelId  String?
+  type            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deleted         Boolean  @default(false)
+  accessToken     String
+  tokenType       String
+  expiresIn       Int
+  expireDate      DateTime
+  refreshToken    String
+  scope           String?
+}
+
+model StoreSettings {
+  id                String   @id @default(cuid())
+  merchantId        String   @unique
+  isActive          Boolean  @default(true)
+  autoPublish       Boolean  @default(false)
+  emailEnabled      Boolean  @default(true)
+  emailDelay        Int      @default(7)
+  emailTemplate     String   @default("default")
+  emailSubject      String   @default("Alışverişiniz nasıldı?")
+  emailFromName     String   @default("")
+  couponEnabled     Boolean  @default(false)
+  couponType        String   @default("percentage")
+  couponValue       Float    @default(10)
+  couponMinPurchase Float    @default(0)
+  couponExpiryDays  Int      @default(30)
+  reminderEnabled   Boolean  @default(false)
+  reminderDelay     Int      @default(5)
+  brandColor        String   @default("#000000")
+  widgetLanguage    String   @default("tr")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  reviews   Review[]
+  emailLogs EmailLog[]
+}
+
+model WidgetSettings {
+  id                   String   @id @default(cuid())
+  merchantId           String   @unique
+  reviewsWidgetEnabled Boolean  @default(true)
+  reviewsLayout        String   @default("list")
+  reviewsPerPage       Int      @default(10)
+  reviewsSortDefault   String   @default("newest")
+  showReviewsHeader    Boolean  @default(true)
+  showFilters          Boolean  @default(true)
+  showPhotos           Boolean  @default(true)
+  starRatingEnabled    Boolean  @default(true)
+  starRatingStyle      String   @default("badge")
+  starColor            String   @default("#FFB800")
+  emptyStarBehavior    String   @default("hide")
+  trustBadgeEnabled    Boolean  @default(false)
+  trustBadgePosition   String   @default("bottom-left")
+  carouselEnabled      Boolean  @default(false)
+  carouselAutoplay     Boolean  @default(true)
+  carouselSpeed        Int      @default(5000)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Review {
+  id                 String    @id @default(cuid())
+  merchantId         String
+  productId          String
+  productName        String
+  productImage       String?
+  productHref        String?
+  orderId            String?
+  customerName       String
+  customerEmail      String
+  rating             Int
+  title              String?
+  body               String
+  isVerifiedPurchase Boolean   @default(false)
+  status             String    @default("pending")
+  merchantReply      String?
+  merchantReplyAt    DateTime?
+  source             String    @default("email")
+  ipAddress          String?
+  locale             String    @default("tr")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  publishedAt        DateTime?
+
+  media   ReviewMedia[]
+  coupons CouponUsage[]
+  store   StoreSettings @relation(fields: [merchantId], references: [merchantId])
+
+  @@unique([customerEmail, productId, orderId])
+  @@index([merchantId])
+  @@index([merchantId, productId, status])
+  @@index([merchantId, status])
+}
+
+model ReviewMedia {
+  id           String   @id @default(cuid())
+  reviewId     String
+  type         String
+  url          String
+  thumbnailUrl String?
+  width        Int?
+  height       Int?
+  sizeBytes    Int
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+}
+
+model EmailLog {
+  id            String    @id @default(cuid())
+  merchantId    String
+  orderId       String
+  customerEmail String
+  type          String
+  status        String    @default("scheduled")
+  scheduledAt   DateTime
+  sentAt        DateTime?
+  reviewToken   String    @unique
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
+
+  store StoreSettings @relation(fields: [merchantId], references: [merchantId])
+
+  @@index([merchantId])
+  @@index([status, scheduledAt])
+  @@index([reviewToken])
+}
+
+model CouponUsage {
+  id            String   @id @default(cuid())
+  merchantId    String
+  reviewId      String
+  couponCode    String   @unique
+  discountType  String
+  discountValue Float
+  isUsed        Boolean  @default(false)
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  review Review @relation(fields: [reviewId], references: [id])
+
+  @@index([merchantId])
+}
+
+model ProductRatingCache {
+  id                 String   @id @default(cuid())
+  merchantId         String
+  productId          String
+  averageRating      Float    @default(0)
+  totalReviews       Int      @default(0)
+  ratingDistribution String   @default("{\"1\":0,\"2\":0,\"3\":0,\"4\":0,\"5\":0}")
+  updatedAt          DateTime @updatedAt
+
+  @@unique([merchantId, productId])
+  @@index([merchantId])
+}
