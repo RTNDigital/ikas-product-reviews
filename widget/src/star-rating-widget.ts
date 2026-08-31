@@ -96,24 +96,25 @@ export async function renderStarRatings(baseUrl: string, merchantId: string): Pr
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   async function flushBatch() {
-    if (pendingCards.size === 0) return;
-    const productIds = Array.from(pendingCards.keys()).slice(0, MAX_BATCH);
-    const batch = new Map<string, HTMLElement[]>();
-    for (const id of productIds) {
-      const cards = pendingCards.get(id);
-      if (cards) batch.set(id, cards);
-      pendingCards.delete(id);
-    }
+    while (pendingCards.size > 0) {
+      const productIds = Array.from(pendingCards.keys()).slice(0, MAX_BATCH);
+      const batch = new Map<string, HTMLElement[]>();
+      for (const id of productIds) {
+        const cards = pendingCards.get(id);
+        if (cards) batch.set(id, cards);
+        pendingCards.delete(id);
+      }
 
-    const { ratings, settings } = await fetchBatchRatings(baseUrl, merchantId, productIds);
+      const { ratings, settings } = await fetchBatchRatings(baseUrl, merchantId, productIds);
 
-    for (const [productId, cards] of batch.entries()) {
-      const rating = ratings[productId];
-      for (const card of cards) {
-        if (rating) {
-          insertBadge(card, rating.average, rating.count, settings);
-        } else {
-          insertEmptyBadge(card, settings);
+      for (const [productId, cards] of batch.entries()) {
+        const rating = ratings[productId];
+        for (const card of cards) {
+          if (rating) {
+            insertBadge(card, rating.average, rating.count, settings);
+          } else {
+            insertEmptyBadge(card, settings);
+          }
         }
       }
     }

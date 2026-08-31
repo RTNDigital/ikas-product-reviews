@@ -36,18 +36,6 @@ export function relativeTimeTR(dateStr: string): string {
   return formatDateTR(dateStr);
 }
 
-export function debounce<T extends (...args: never[]) => void>(fn: T, wait: number): T {
-  let timer: ReturnType<typeof setTimeout> | null = null;
-  return function (this: unknown, ...args: Parameters<T>) {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => fn.apply(this, args), wait);
-  } as T;
-}
-
-export function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
 let idCounter = 0;
 export function uniqueId(prefix: string): string {
   idCounter += 1;
