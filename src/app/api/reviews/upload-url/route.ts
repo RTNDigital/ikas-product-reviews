@@ -13,18 +13,25 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
-  let body: { merchantId?: string; contentType?: string; fileName?: string };
+  let body: { merchantId?: string; contentType?: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400, headers: CORS_HEADERS });
   }
 
-  const { merchantId, contentType, fileName } = body;
+  const { merchantId, contentType } = body;
 
   if (!merchantId || !contentType) {
     return NextResponse.json(
       { error: 'merchantId and contentType are required' },
+      { status: 400, headers: CORS_HEADERS },
+    );
+  }
+
+  if (!/^[a-zA-Z0-9_-]+$/.test(merchantId)) {
+    return NextResponse.json(
+      { error: 'Invalid merchantId format' },
       { status: 400, headers: CORS_HEADERS },
     );
   }
