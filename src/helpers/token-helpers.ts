@@ -148,6 +148,8 @@ export class TokenHelpers {
    */
   static validateCodeSignature = (code: string, receivedSignature: string, secret: string): boolean => {
     const expectedSignature = crypto.createHmac('sha256', secret).update(code, 'utf8').digest('hex');
-    return expectedSignature === receivedSignature;
+    const a = Buffer.from(expectedSignature, 'hex');
+    const b = Buffer.from(receivedSignature, 'hex');
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
   };
 }
