@@ -79,7 +79,14 @@ function insertEmptyBadge(card: HTMLElement, settings: RatingsWidgetSettings) {
 
   const badge = document.createElement('span');
   badge.className = 'pr-badge';
-  badge.innerHTML = `<span class="pr-badge-empty-text">Henüz değerlendirme yok</span>`;
+  if (settings.starColor) badge.style.setProperty('--pr-star-color', settings.starColor);
+
+  if (settings.emptyStarBehavior === 'dash') {
+    badge.innerHTML = `<span class="pr-badge-empty-text">—</span>`;
+  } else {
+    // 'show' (and any unrecognized value): render five empty stars, no count.
+    badge.innerHTML = `<span class="pr-badge-stars">${renderStaticStarsHTML(0, { size: 13, starColor: settings.starColor })}</span>`;
+  }
   shadow.appendChild(badge);
   insertBadgeHost(card, badgeHost);
 }
